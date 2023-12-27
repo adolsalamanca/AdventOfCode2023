@@ -32,9 +32,10 @@ fn find_first_and_last_digit(input: &str) -> (u32, u32) {
                 if !number_found {
                     first_digit = i;
                     number_found = true;
-                } else { 
-                    last_digit = i;
+                    ()
                 }
+                
+                last_digit = i;
             }
         }
     }
