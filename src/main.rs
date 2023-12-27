@@ -4,12 +4,14 @@ use std::path::Path;
 
 fn main() {
     if let Ok(lines) = read_lines("./test.txt") {
-        // Consumes the iterator, returns an (Optional) String
+        let mut out:u32=0;
         for result in lines {
             if let Ok(line) = result {
-                println!("{}", line);
+                out += find_first_and_last_digit(line.as_str());                
             }
         }
+        
+        println!("The result is: {}",out);
     }
 }
 
@@ -20,7 +22,7 @@ fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 }
 
 
-fn find_first_and_last_digit(input: &str) -> (u32, u32) {
+fn find_first_and_last_digit(input: &str) -> u32 {
     let mut number_found = false;
     let mut first_digit: u32 = 0;
     let mut last_digit: u32 = 0;
@@ -40,21 +42,22 @@ fn find_first_and_last_digit(input: &str) -> (u32, u32) {
         }
     }
 
-    (first_digit, last_digit)
+    first_digit*10 + last_digit
 }
+
+#[test]
+fn test_find_first_and_last_digit_with_letters() {
+    let str = "3x12312338zq";
+    let digits= find_first_and_last_digit(str);
+
+    assert_eq!(digits, 38);
+}
+
 
 #[test]
 fn test_find_first_and_last_digit() {
     let str = "12345";
     let digits= find_first_and_last_digit(str);
 
-    assert_eq!(digits, (1,5));
-}
-
-#[test]
-fn test_find_first_and_last_digit_with_letters() {
-    let str = "1x12312338zq";
-    let digits= find_first_and_last_digit(str);
-
-    assert_eq!(digits, (1,8));
+    assert_eq!(digits, 15);
 }
