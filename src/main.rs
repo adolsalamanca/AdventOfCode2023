@@ -3,14 +3,14 @@ use std::io::{self, BufRead};
 use std::path::Path;
 
 fn main() {
-    if let Ok(lines) = read_lines("./test.txt") {
+    if let Ok(lines) = read_lines("./input.txt") {
         let mut out:u32=0;
         for result in lines {
             if let Ok(line) = result {
                 out += find_first_and_last_digit(line.as_str());                
             }
         }
-        
+
         println!("The result is: {}",out);
     }
 }
