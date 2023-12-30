@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use regex::{Regex, Split};
 
+#[derive(Clone)]
 pub struct Game {
     game_identifier: u32,
     blue_limit: u32,
@@ -12,11 +13,7 @@ impl Game {
     pub fn new(blue_limit: u32, red_limit: u32, green_limit: u32) -> Self {
         Self { game_identifier:0, blue_limit, red_limit, green_limit }
     }
-    pub fn evaluate(self, blue_balls: u32, red_balls: u32, green_balls: u32) -> bool {
-        self.blue_limit >= blue_balls && self.red_limit >= red_balls && self.green_limit >= green_balls
-    }
-
-    pub fn eval(mut self, input: &str) -> bool {
+    fn eval(mut self, input: &str) -> (bool, u32) {
         let re = Regex::new(r"Game\s(?P<game>\d+):\s+(?P<counts_colors>(?:\s*(?P<count>\d+)\s+(?P<color>\w+),*\s*;*)+)").unwrap();
 
         let matches: Vec<_> = re
@@ -49,17 +46,17 @@ impl Game {
                 match color {
                     "blue" => {
                         if count > self.blue_limit {
-                            return false
+                            return (false, 0)
                         }
                     }
                     "red" => {
                         if count > self.red_limit {
-                            return false
+                            return (false, 0)
                         }
                     }
                     "green" => {
                         if count > self.green_limit {
-                            return false
+                            return (false, 0)
                         }
                     }
 
@@ -68,7 +65,12 @@ impl Game {
             }
         }
 
-        return true
+        return (true, self.game_identifier)
+    }
+
+    pub fn play(mut self, input: &str) -> u32 {
+        let x = self.eval(input);
+        x.1
     }
 }
 
@@ -104,39 +106,3 @@ mod tests {
     }
 
 }
-
-
-/*
-    pub fn evaluate_str(&mut self, input: &str) -> bool {
-        // Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
-        let re = Regex::new(r"Game\s(?P<game>\d+):\s+(?P<counts_colors>(?:(?P<count>\d+)\s+(?P<color>\w+),*\s*)+);").unwrap();
-
-        let matches: Vec<_> = re
-            .captures_iter(input)
-            .flat_map(|caps| {
-                caps.name("game")
-                    .and_then(|game| caps.name("counts_colors").map(|counts_colors| (game.as_str(), counts_colors.as_str())))
-            })
-            .collect();
-
-        for (game, counts_colors) in &matches {
-            self.identifier = game.parse().unwrap();
-            let counts_colors_re = Regex::new(r"(?P<count>\d+)\s+(?P<color>\w+),*\s*").unwrap();
-            let counts_colors_matches: Vec<_> = counts_colors_re
-                .captures_iter(counts_colors)
-                .flat_map(|caps| {
-                    caps.name("count")
-                        .zip(caps.name("color"))
-                        .map(|(count, color)| (count.as_str(), color.as_str()))
-                })
-                .collect();
-
-            println!("Game: {}", game);
-            for (count, color) in counts_colors_matches {
-                println!("  Count: {}, Color: {}", count, color);
-            }
-        }
-
-        return true
-    }
-*/
