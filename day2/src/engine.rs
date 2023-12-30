@@ -14,22 +14,7 @@ impl Game {
         Self { game_identifier:0, blue_limit, red_limit, green_limit }
     }
     fn eval(mut self, input: &str) -> (bool, u32) {
-        let re = Regex::new(r"Game\s(?P<game>\d+):\s+(?P<counts_colors>(?:\s*(?P<count>\d+)\s+(?P<color>\w+),*\s*;*)+)").unwrap();
-
-        let matches: Vec<_> = re
-            .captures_iter(input)
-            .flat_map(|caps| {
-                caps.name("game")
-                    .and_then(|game| caps.name("counts_colors")
-                        .map(|counts_colors| (game.as_str(), counts_colors.as_str())))
-            })
-            .collect();
-
-        self.game_identifier = matches[0].0.parse().unwrap();
-
-        let x: &str = matches[0].1;
-        let occurrences : Vec<&str> = x.split(";").collect();
-
+        let occurrences : Vec<&str> = self.extract_colors(input);
 
         for occurrence in occurrences {
             let counts_colors_re = Regex::new(r"(?P<count>\d+)\s+(?P<color>\w+),*\s*").unwrap();
@@ -69,21 +54,7 @@ impl Game {
     }
 
     pub fn minimum(mut self, input: &str) -> u32 {
-        let re = Regex::new(r"Game\s(?P<game>\d+):\s+(?P<counts_colors>(?:\s*(?P<count>\d+)\s+(?P<color>\w+),*\s*;*)+)").unwrap();
-
-        let matches: Vec<_> = re
-            .captures_iter(input)
-            .flat_map(|caps| {
-                caps.name("game")
-                    .and_then(|game| caps.name("counts_colors")
-                        .map(|counts_colors| (game.as_str(), counts_colors.as_str())))
-            })
-            .collect();
-
-        self.game_identifier = matches[0].0.parse().unwrap();
-
-        let x: &str = matches[0].1;
-        let occurrences : Vec<&str> = x.split(";").collect();
+        let occurrences : Vec<&str> = self.extract_colors(input);
 
         let mut minimum_blue:u32 = 0;
         let mut minimum_red:u32 = 0;
@@ -125,6 +96,25 @@ impl Game {
 
         return minimum_blue*minimum_green*minimum_red
     }
+
+
+    pub fn extract_colors(mut self, input: &str) -> Vec<&str> {
+        let re = Regex::new(r"Game\s(?P<game>\d+):\s+(?P<counts_colors>(?:\s*(?P<count>\d+)\s+(?P<color>\w+),*\s*;*)+)").unwrap();
+
+        let matches: Vec<_> = re
+            .captures_iter(input)
+            .flat_map(|caps| {
+                caps.name("game")
+                    .and_then(|game| caps.name("counts_colors")
+                        .map(|counts_colors| (game.as_str(), counts_colors.as_str())))
+            })
+            .collect();
+
+        self.game_identifier = matches[0].0.parse().unwrap();
+        matches[0].1.split(";").collect()
+    }
+
+
 
     pub fn play(mut self, input: &str) -> u32 {
         let x = self.eval(input);
