@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
@@ -21,7 +22,6 @@ fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
     Ok(io::BufReader::new(file).lines())
 }
 
-
 fn find_first_and_last_digit(input: &str) -> u32 {
     let mut number_found = false;
     let mut first_digit: u32 = 0;
@@ -44,6 +44,29 @@ fn find_first_and_last_digit(input: &str) -> u32 {
 
     first_digit*10 + last_digit
 }
+
+
+fn find_first_and_last_digit_as_letters(input: &str) -> u32 {
+    let mut number_found = false;
+    let mut first_digit: u32 = 0;
+    let mut last_digit: u32 = 0;
+
+    let re = Regex::new(r"(one|two|three|four|five|six|seven|eight|nine|ten|\d)+").unwrap();
+    // re.captures(input)
+    assert!(re.is_match(input));
+
+    return 1
+}
+
+
+#[test]
+fn test_find_first_and_last_digit_as_letters() {
+    let str = "six3x12312338zq";
+    let digits= find_first_and_last_digit_as_letters(str);
+
+    assert_eq!(digits, 38);
+}
+
 
 #[test]
 fn test_find_first_and_last_digit_with_letters() {
