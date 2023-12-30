@@ -4,7 +4,7 @@ use std::io::{self, BufRead};
 use std::path::Path;
 
 fn main() {
-    if let Ok(lines) = read_lines("./input.txt") {
+    if let Ok(lines) = read_lines("./test.txt") {
         let mut out:u32=0;
         for result in lines {
             if let Ok(line) = result {
@@ -81,6 +81,14 @@ fn parse_as_number(p0: &str) -> u32 {
     }
 }
 
+
+#[test]
+fn test_find_first_and_last_digit_as_letters_corner_case() {
+    let str = "znrprxdtp9sevenoneightnk";
+    let digits= find_first_and_last_digit_second_part(str);
+
+    assert_eq!(digits, 98);
+}
 
 #[test]
 fn test_find_first_and_last_digit_as_letters() {
