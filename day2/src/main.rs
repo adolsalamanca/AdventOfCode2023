@@ -9,10 +9,11 @@ fn main() {
     let game = Game::new(14,12, 13);
     if let Ok(lines) = read_lines("./input.txt") {
         let mut out:u32=0;
+
         for result in lines {
             if let Ok(line) = result {
                 // out += game.clone().play(line.as_str());
-                out += game.clone().minimum(line.as_str());
+                out += game.clone().minimum_balls_power(line.as_str());
             }
         }
 

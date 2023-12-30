@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use regex::{Regex, Split};
+use regex::{Regex};
 
 #[derive(Clone)]
 pub struct Game {
@@ -13,8 +13,8 @@ impl Game {
     pub fn new(blue_limit: u32, red_limit: u32, green_limit: u32) -> Self {
         Self { game_identifier:0, blue_limit, red_limit, green_limit }
     }
-    fn eval(mut self, input: &str) -> (bool, u32) {
-        let occurrences : Vec<&str> = self.clone().clone().extract_colors(input);
+    fn is_valid_game(self, input: &str) -> (bool, u32) {
+        let occurrences : Vec<&str> = self.clone().extract_colors(input);
 
         for occurrence in occurrences {
             let counts_colors_re = Regex::new(r"(?P<count>\d+)\s+(?P<color>\w+),*\s*").unwrap();
@@ -50,10 +50,10 @@ impl Game {
             }
         }
 
-        return (true, self.game_identifier)
+        (true, self.game_identifier)
     }
 
-    pub fn minimum(mut self, input: &str) -> u32 {
+    pub fn minimum_balls_power(self, input: &str) -> u32 {
         let occurrences : Vec<&str> = self.clone().extract_colors(input);
 
         let mut minimum_blue:u32 = 0;
@@ -94,7 +94,7 @@ impl Game {
             }
         }
 
-        return minimum_blue*minimum_green*minimum_red
+        minimum_blue*minimum_green*minimum_red
     }
 
 
@@ -111,13 +111,13 @@ impl Game {
             .collect();
 
         self.game_identifier = matches[0].0.parse().unwrap();
-        matches[0].1.split(";").collect()
+        matches[0].1.split(';').collect()
     }
 
 
 
-    pub fn play(mut self, input: &str) -> u32 {
-        let x = self.eval(input);
+    pub fn play(self, input: &str) -> u32 {
+        let x = self.is_valid_game(input);
         x.1
     }
 }
@@ -129,21 +129,21 @@ mod tests {
     fn should_return_return_the_power_of_minimum_colors_required(){
         let mut game = Game::new(10, 10, 10);
 
-        assert_eq!(120, game.minimum("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 5 green"));
+        assert_eq!(120, game.minimum_balls_power("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 5 green"));
     }
 
     #[test]
     fn should_return_true_given_a_valid_game_as_string(){
         let mut game = Game::new(10, 10, 10);
 
-        assert_eq!(true, game.eval("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 5 green").0);
+        assert_eq!(true, game.is_valid_game("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 5 green").0);
     }
     #[test]
     fn should_return_false_given_an_invalid_game_as_string(){
 
         let mut game = Game::new(10, 10, 10);
 
-        assert_eq!(false, game.eval("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 5 green, 6 green").0);
+        assert_eq!(false, game.is_valid_game("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 5 green, 6 green").0);
     }
 
 }
