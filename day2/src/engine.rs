@@ -14,7 +14,7 @@ impl Game {
         Self { game_identifier:0, blue_limit, red_limit, green_limit }
     }
     fn eval(mut self, input: &str) -> (bool, u32) {
-        let occurrences : Vec<&str> = self.extract_colors(input);
+        let occurrences : Vec<&str> = self.clone().clone().extract_colors(input);
 
         for occurrence in occurrences {
             let counts_colors_re = Regex::new(r"(?P<count>\d+)\s+(?P<color>\w+),*\s*").unwrap();
@@ -54,7 +54,7 @@ impl Game {
     }
 
     pub fn minimum(mut self, input: &str) -> u32 {
-        let occurrences : Vec<&str> = self.extract_colors(input);
+        let occurrences : Vec<&str> = self.clone().extract_colors(input);
 
         let mut minimum_blue:u32 = 0;
         let mut minimum_red:u32 = 0;

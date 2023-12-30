@@ -11,7 +11,8 @@ fn main() {
         let mut out:u32=0;
         for result in lines {
             if let Ok(line) = result {
-                out += game.clone().play(line.as_str());
+                // out += game.clone().play(line.as_str());
+                out += game.clone().minimum(line.as_str());
             }
         }
 
