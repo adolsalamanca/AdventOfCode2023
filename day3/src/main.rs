@@ -6,7 +6,7 @@ use std::path::Path;
 use crate::engine::Game;
 
 fn main() {
-    let game = Game::new(String::from('.'));
+    let game = Game::new('.', 10);
     if let Ok(lines) = read_lines("./input.txt") {
         let mut out:u32=0;
 
