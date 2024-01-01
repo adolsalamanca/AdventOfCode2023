@@ -34,10 +34,12 @@ impl Game {
         }
 
         let mut part_numbers : Vec<u32> = Vec::new();
-        for i in 0..m.len() {
-            for j in 0..m[i].len() {
+        let limit_i = m.len();
+        for i in 0..limit_i {
+            let limit_j = m[i].len();
+            for j in 0..limit_j {
                 if m[i][j] == 's' {
-                    part_numbers.append(&mut retrieve_numbers_around(m.clone(), i, j))
+                    part_numbers.append(&mut retrieve_numbers_around(m.clone(), i, j, limit_i, limit_j))
                     // Find all numbers around to put in the final vec
                     // ..12......
                     // *....*1...
@@ -68,7 +70,7 @@ impl Game {
     }
 }
 
-fn retrieve_numbers_around<'a>(parts: Vec<Vec<char>>, symbol_i: usize, symbol_j: usize) -> Vec<u32> {
+fn retrieve_numbers_around<'a>(parts: Vec<Vec<char>>, symbol_i: usize, symbol_j: usize, limit_i: usize, limit_j: usize) -> Vec<u32> {
     println!("Coming due to symbol presence, i={},j={}",symbol_i, symbol_j);
 
     let mut v: Vec<u32> = Vec::new();
@@ -80,14 +82,14 @@ fn retrieve_numbers_around<'a>(parts: Vec<Vec<char>>, symbol_i: usize, symbol_j:
     if symbol_i > 0 {
         from_i = symbol_i - 1;
     }
-    if symbol_i < 9 {
+    if symbol_i < limit_i-1 {
         to_i = symbol_i + 1;
     }
 
     if symbol_j > 0 {
         from_j = symbol_j - 1;
     }
-    if symbol_j < 9 {
+    if symbol_j < limit_j-1 {
         to_j = symbol_j + 1;
     }
 
@@ -98,7 +100,8 @@ fn retrieve_numbers_around<'a>(parts: Vec<Vec<char>>, symbol_i: usize, symbol_j:
         for j in from_j..=to_j {
             let value = parts[i][j];
             println!("{}",value);
-            if parts[i][j] == 's' || parts[i][j] == '.' {
+
+            if parts[i][j] == 's' || parts[i][j] == '.' {                 
                 if number != "" {
                     v.push(number.parse().unwrap());
                 }
