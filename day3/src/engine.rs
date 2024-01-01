@@ -1,62 +1,143 @@
+use std::vec;
+#[derive(Clone)]
+pub struct Match {
+    number: u32,
+    coordinates: Vec<(usize, usize)>
+}
+
+impl Match {
+    pub fn is_adjacent(&self, compared_coord: (usize, usize)) -> bool {
+        for c in &self.coordinates {
+            let current_coord_i = c.0;
+            let current_coord_j = c.1;
+
+            let compared_coord_i = compared_coord.0;
+            let compared_coord_j = compared_coord.1;
+
+            if current_coord_i == compared_coord_i && current_coord_j == compared_coord_j {
+                continue;
+            }
+
+            if current_coord_i > 0 && current_coord_j > 0 {
+                if (current_coord_i+1 == compared_coord_i || current_coord_i-1 == compared_coord_i || current_coord_i == compared_coord_i)
+                    && (current_coord_j+1 == compared_coord_j || current_coord_j-1 == compared_coord_j || current_coord_j == compared_coord_j) {
+                    return true;
+                }
+                continue;
+            }
+
+            if current_coord_j > 0 {
+                if (current_coord_i+1 == compared_coord_i || current_coord_i == compared_coord_i)
+                    && (current_coord_j+1 == compared_coord_j || current_coord_j-1 == compared_coord_j || current_coord_j == compared_coord_j) {
+                    return true;
+                }
+                continue;
+            }
+
+            if current_coord_i > 0 {
+                if (current_coord_i+1 == compared_coord_i || current_coord_i-1 == compared_coord_i || current_coord_i == compared_coord_i)
+                    && (current_coord_j+1 == compared_coord_j || current_coord_j == compared_coord_j) {
+                    return true;
+                }
+                continue;
+            }
+
+            if (current_coord_i+1 == compared_coord_i || current_coord_i == compared_coord_i)
+                && (current_coord_j+1 == compared_coord_j || current_coord_j == compared_coord_j) {
+                return true;
+            }
+
+        }
+        false
+    }
+    pub fn get_number(self) -> u32 {
+        self.number
+    }
+    pub fn new(number: u32, coordinates: Vec<(usize, usize)>) -> Self {
+        Self { number, coordinates }
+    }
+}
+
 #[derive(Clone)]
 pub struct Game {
-    skip_symbol: char,
     width: usize,
     length: usize
 }
 
 impl Game {
-    pub fn new(skip_symbol: char, width: usize) -> Self {
-        Self { skip_symbol, width, length:0 }
+    pub fn new() -> Self {
+        Self { width:0, length:0 }
     }
 
-    pub fn sum_parts(&mut self, parts: Vec<String>) -> u32 {
+    pub fn sum_parts_part1(&mut self, parts: Vec<String>) -> u32 {
         self.length = parts.len();
+        self.width = parts[0].len();
         let mut m: Vec<Vec<char>> = vec![vec!['0'; self.width]; parts.len()];
+
         for i in 0..parts.len() {
             let chars: Vec<char> = parts[i].chars().collect();
-            for j in 0..chars.len() {
-                match chars[j] {
+            for (j, item) in chars.iter().enumerate() {
+                match item {
                     '.' => { m[i][j] = '.'},
-                    '0' => { m[i][j] = '0'}
-                    '1' => { m[i][j] = '1'}
-                    '2' => { m[i][j] = '2'}
-                    '3' => { m[i][j] = '3'}
-                    '4' => { m[i][j] = '4'}
-                    '5' => { m[i][j] = '5'}
-                    '6' => { m[i][j] = '6'}
-                    '7' => { m[i][j] = '7'}
-                    '8' => { m[i][j] = '8'}
-                    '9' => { m[i][j] = '9'}
+                    '0'..='9' => m[i][j] = *item,
                     _ => { m[i][j] = 's' }
                 }
             }
         }
 
+        let mut matches : Vec<Match> = Vec::new();
+        let mut coordinates : Vec<(usize,usize)> = Vec::new();
+        let mut number: String;
+
+        for (i, line) in m.iter().enumerate() {
+            number = String::new();
+            let mut append_number = false;
+
+            for j in 0..line.len() {
+                let value = m[i][j];
+
+                if is_number(value) {
+                    if !append_number {
+                        number = String::from(value);
+                        append_number = true;
+                        coordinates.push((i,j));
+                        continue;
+                    }
+
+                    number = format!("{}{}",number,value);
+                    coordinates.push((i,j));
+                    // We need to store all coordinates where there is a number.
+                    // After that, if a single symbol is adjacent to the number, number is added to part_numbers vector.
+                } else {
+                    if !number.is_empty(){
+                        matches.push(Match::new(number.parse().unwrap(), coordinates.clone()));
+                    }
+
+                    coordinates.clear();
+                    number.clear();
+                    append_number = false;
+                }
+            }
+
+            if !number.is_empty(){
+                matches.push(Match::new(number.parse().unwrap(), coordinates.clone()));
+            }
+        }
+
         let mut part_numbers : Vec<u32> = Vec::new();
-        let limit_i = m.len();
-        for i in 0..limit_i {
-            let limit_j = m[i].len();
-            for j in 0..limit_j {
-                if m[i][j] == 's' {
-                    part_numbers.append(&mut retrieve_numbers_around(m.clone(), i, j, limit_i, limit_j))
-                    // Find all numbers around to put in the final vec
-                    // ..12......
-                    // *....*1...
-                    // 22........
-                    // ..........
+        for (i, line) in m.iter().enumerate() {
+            for j in 0..line.len() {
+                if is_symbol(m[i][j]) {
+                    // If a single symbol is adjacent to a match, we add that number to the part_numbers array
+                    // and then remove it from the Matches array.
+                    matches.retain(|current_match| {
+                        if current_match.clone().is_adjacent((i,j)) {
+                            part_numbers.push(current_match.clone().get_number());
+                            return false
+                        }
+                        true
+                    })
 
-
-                    // In this case, i=1,j=0 has a symbol.
-                    // We need to analyze i=0,j=0; i=0,j=1; i=1,j=1; i=2,j=0; i=2,j=1;
-                    // That is --
-                    //
-
-                    // There is a match in two of them, i=2,j=0; i=2,j=1 =>
-                    // As it is contiguous, we need to concatenate chars to generate a number, 22.
-                    // Now the same for i=1,j=5
-                    // We need to analyze i=0,j=4; i=0,j=5; i=0,j=6; i=1,j=4; i=1,j=6; i=2,j=4; i=2,j=5; i=2,j=6;
-                    // There's only one match, i=0,j=6; As it is a single match, we just add this char as uint32 to the sum of parts.
                 }
             }
         }
@@ -66,111 +147,110 @@ impl Game {
             result += p;
         }
 
-        return result;
-    }
+        result
+     }
 }
 
-fn retrieve_numbers_around<'a>(parts: Vec<Vec<char>>, symbol_i: usize, symbol_j: usize, limit_i: usize, limit_j: usize) -> Vec<u32> {
-    println!("Coming due to symbol presence, i={},j={}",symbol_i, symbol_j);
-
-    let mut v: Vec<u32> = Vec::new();
-    let mut from_i = symbol_i;
-    let mut to_i = symbol_i;
-    let mut from_j = symbol_j;
-    let mut to_j = symbol_j;
-
-    if symbol_i > 0 {
-        from_i = symbol_i - 1;
-    }
-    if symbol_i < limit_i-1 {
-        to_i = symbol_i + 1;
-    }
-
-    if symbol_j > 0 {
-        from_j = symbol_j - 1;
-    }
-    if symbol_j < limit_j-1 {
-        to_j = symbol_j + 1;
-    }
-
-    let mut append_number = false;
-    for i in from_i..=to_i {
-        let mut number = String::new();
-
-        for j in from_j..=to_j {
-            let value = parts[i][j];
-            println!("{}",value);
-
-            if parts[i][j] == 's' || parts[i][j] == '.' {                 
-                if number != "" {
-                    v.push(number.parse().unwrap());
-                }
-                append_number = false;
-            } else {
-                if append_number {
-                    number = format!("{}{}",number,parts[i][j]);
-                    continue;
-                }
-
-                number = String::from(parts[i][j]);
-                append_number = true;
-            }
-        }
-
-        if number != "" {
-            v.push(number.parse().unwrap());
-        }
-        append_number = false;
-    }
-
-    v
+fn is_number(value: char) -> bool {
+    value != 's' && value != '.'
 }
 
+fn is_symbol(value: char) -> bool {
+    value == 's'
+}
+#[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn should_sum_all_parts_adjacent_to_symbols(){
-        let mut game = Game::new('.', 10);
+    fn should_implement_adjacent_upper_left_corner(){
+        let m = Match::new(1, vec![(0,0)]);
 
-        let mut lines = Vec::new();
-        // 467..114..
-        // ...*......
-        // ..35..633.
-        // ......#...
-
-
-        lines.push(String::from("467..114.."));
-        lines.push(String::from("...*......"));
-        lines.push(String::from("..35..633."));
-        lines.push(String::from("......#..."));
-
-        // Should add all parts but 114
-        // 467 + 35 + 633 = 1135
-
-        assert_eq!(1135, game.sum_parts(lines));
+        assert_eq!(false, m.clone().is_adjacent((0,0)));
+        assert_eq!(true, m.clone().is_adjacent((0,1)));
+        assert_eq!(true, m.clone().is_adjacent((1,0)));
+        assert_eq!(true, m.clone().is_adjacent((1,1)));
+        assert_eq!(false, m.clone().is_adjacent((0,2)));
     }
 
     #[test]
-    fn should_sum_all_parts_adjacent_to_symbols_start_new(){
-        let mut game = Game::new('.', 10);
+    fn should_implement_adjacent_upper_right_corner(){
+        let m = Match::new(1, vec![(0,2)]);
+
+        assert_eq!(true, m.clone().is_adjacent((0,1)));
+        assert_eq!(true, m.clone().is_adjacent((1,1)));
+        assert_eq!(true, m.clone().is_adjacent((1,2)));
+        assert_eq!(true, m.clone().is_adjacent((1,2)));
+    }
+    #[test]
+    fn should_implement_adjacent_bottom_left_corner(){
+        let m = Match::new(1, vec![(2,0)]);
+
+        assert_eq!(true, m.clone().is_adjacent((1,0)));
+        assert_eq!(true, m.clone().is_adjacent((1,1)));
+        assert_eq!(true, m.clone().is_adjacent((2,1)));
+        assert_eq!(false, m.clone().is_adjacent((2,2)));
+    }
+
+    #[test]
+    fn should_implement_adjacent_bottom_right_corner(){
+        let m = Match::new(1, vec![(2,2)]);
+
+        assert_eq!(true, m.clone().is_adjacent((2,1)));
+        assert_eq!(true, m.clone().is_adjacent((1,2)));
+        assert_eq!(true, m.clone().is_adjacent((1,1)));
+    }
+
+    #[test]
+    fn should_implement_adjacent_all(){
+        let m = Match::new(1, vec![(2,2)]);
+
+        assert_eq!(true, m.clone().is_adjacent((1,2)));
+        assert_eq!(true, m.clone().is_adjacent((1,1)));
+        assert_eq!(true, m.clone().is_adjacent((1,3)));
+        assert_eq!(true, m.clone().is_adjacent((2,1)));
+        assert_eq!(true, m.clone().is_adjacent((2,3)));
+        assert_eq!(true, m.clone().is_adjacent((3,2)));
+        assert_eq!(true, m.clone().is_adjacent((3,1)));
+        assert_eq!(true, m.clone().is_adjacent((3,3)));
+    }
+
+    #[test]
+    fn should_sum_all_parts_adjacent_to_symbols_given_example(){
+        let mut game = Game::new();
+        let input_str: &str = "\
+467..114..
+...*......
+..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598..
+";
+
+        let lines: Vec<String> = input_str.lines().map(String::from).collect();
+
+        assert_eq!(4361, game.sum_parts_part1(lines));
+    }
+
+    #[test]
+    fn should_sum_all_parts_adjacent_to_symbols_including_numbers_in_right_corner(){
+        let mut game = Game::new();
 
         let mut lines = Vec::new();
-        // ..12......
-        // *....*1...
-        // 22........
-        // ..........
-
 
         lines.push(String::from("..12......"));
         lines.push(String::from("*....*1..."));
-        lines.push(String::from("22........"));
+        lines.push(String::from("22.......1"));
         lines.push(String::from(".....*...*"));
         lines.push(String::from("....2.3..1"));
 
         // Should add all parts but 29
-        // 22 + 1 + 2 + 3 + 1 = 29
+        // 22 + 1 + 2 + 3 + 1 + 1 = 30
 
-        assert_eq!(29, game.sum_parts(lines));
+        assert_eq!(30, game.sum_parts_part1(lines));
     }
 }

@@ -6,18 +6,16 @@ use std::path::Path;
 use crate::engine::Game;
 
 fn main() {
-    let game = Game::new('.', 10);
+    let mut game = Game::new();
     if let Ok(lines) = read_lines("./input.txt") {
-        let mut out:u32=0;
+        let mut input:Vec<String> = Vec::new();
 
-        for result in lines {
-            if let Ok(line) = result {
-                // out += game.clone().play(line.as_str());
-                // out += game.clone().minimum_balls_power(line.as_str());
-            }
-        }
+        lines.flatten().for_each(|line| {
+            input.push(line);
+        });
 
-        println!("The result is: {}",out);
+        let out = game.sum_parts_part1(input);
+        println!("The result is: {}", out);
     }
 }
 
