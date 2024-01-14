@@ -85,44 +85,7 @@ impl Game {
             }
         }
 
-        let mut matches : Vec<Match> = Vec::new();
-        let mut coordinates : Vec<(usize,usize)> = Vec::new();
-        let mut number: String;
-
-        for (i, line) in m.iter().enumerate() {
-            number = String::new();
-            let mut append_number = false;
-
-            for j in 0..line.len() {
-                let value = m[i][j];
-
-                if is_number(value) {
-                    if !append_number {
-                        number = String::from(value);
-                        append_number = true;
-                        coordinates.push((i,j));
-                        continue;
-                    }
-
-                    number = format!("{}{}",number,value);
-                    coordinates.push((i,j));
-                    // We need to store all coordinates where there is a number.
-                    // After that, if a single symbol is adjacent to the number, number is added to part_numbers vector.
-                } else {
-                    if !number.is_empty(){
-                        matches.push(Match::new(number.parse().unwrap(), coordinates.clone()));
-                    }
-
-                    coordinates.clear();
-                    number.clear();
-                    append_number = false;
-                }
-            }
-
-            if !number.is_empty(){
-                matches.push(Match::new(number.parse().unwrap(), coordinates.clone()));
-            }
-        }
+        let mut matches = Self::extract_all_part_numbers(&mut m);
 
         let mut part_numbers : Vec<u32> = Vec::new();
         for (i, line) in m.iter().enumerate() {
@@ -165,59 +128,19 @@ impl Game {
             }
         }
 
-        let mut matches : Vec<Match> = Vec::new();
-        let mut coordinates : Vec<(usize,usize)> = Vec::new();
-        let mut number: String;
-
-        for (i, line) in m.iter().enumerate() {
-            number = String::new();
-            let mut append_number = false;
-
-            for j in 0..line.len() {
-                let value = m[i][j];
-
-                if is_number(value) {
-                    if !append_number {
-                        number = String::from(value);
-                        append_number = true;
-                        coordinates.push((i,j));
-                        continue;
-                    }
-
-                    number = format!("{}{}",number,value);
-                    coordinates.push((i,j));
-                    // We need to store all coordinates where there is a number.
-                    // After that, if a single symbol is adjacent to the number, number is added to part_numbers vector.
-                } else {
-                    if !number.is_empty(){
-                        matches.push(Match::new(number.parse().unwrap(), coordinates.clone()));
-                    }
-
-                    coordinates.clear();
-                    number.clear();
-                    append_number = false;
-                }
-            }
-
-            if !number.is_empty(){
-                matches.push(Match::new(number.parse().unwrap(), coordinates.clone()));
-            }
-        }
+        let matches = Self::extract_all_part_numbers(&mut m);
 
         let mut gears: Vec<u32> = Vec::new();
         for (i, line) in m.iter().enumerate() {
             for j in 0..line.len() {
                 if is_gear_former(m[i][j]) {
                     let mut current_gear_parts: Vec<u32> = Vec::new();
-                    let mut remove_parts_idx : Vec<usize> = Vec::new();
 
-                    for (idx, c) in matches.iter().enumerate() {
+                    for c in matches.iter() {
                         if c.is_adjacent((i,j)) {
                             current_gear_parts.push(c.clone().get_number());
-                            remove_parts_idx.push(idx);
                         }
                     }
-
                     if current_gear_parts.len() == 2 {
                         gears.push(current_gear_parts[0]*current_gear_parts[1]);
                     }
@@ -232,6 +155,46 @@ impl Game {
 
         result
      }
+
+    fn extract_all_part_numbers(m: &mut [Vec<char>]) -> Vec<Match> {
+        let mut matches: Vec<Match> = Vec::new();
+        let mut coordinates: Vec<(usize, usize)> = Vec::new();
+        let mut number: String;
+
+        for (i, line) in m.iter().enumerate() {
+            number = String::new();
+            let mut append_number = false;
+
+            for j in 0..line.len() {
+                let value = m[i][j];
+
+                if is_number(value) {
+                    if !append_number {
+                        number = String::from(value);
+                        append_number = true;
+                        coordinates.push((i, j));
+                        continue;
+                    }
+
+                    number = format!("{}{}", number, value);
+                    coordinates.push((i, j));
+                } else {
+                    if !number.is_empty() {
+                        matches.push(Match::new(number.parse().unwrap(), coordinates.clone()));
+                    }
+
+                    coordinates.clear();
+                    number.clear();
+                    append_number = false;
+                }
+            }
+
+            if !number.is_empty() {
+                matches.push(Match::new(number.parse().unwrap(), coordinates.clone()));
+            }
+        }
+        matches
+    }
 }
 
 fn is_number(value: char) -> bool {
