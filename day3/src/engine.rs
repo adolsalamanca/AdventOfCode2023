@@ -149,14 +149,101 @@ impl Game {
 
         result
      }
+    pub fn calculate_gear_ratio_part2(&mut self, parts: Vec<String>) -> u32 {
+        self.length = parts.len();
+        self.width = parts[0].len();
+        let mut m: Vec<Vec<char>> = vec![vec!['0'; self.width]; parts.len()];
+
+        for i in 0..parts.len() {
+            let chars: Vec<char> = parts[i].chars().collect();
+            for (j, item) in chars.iter().enumerate() {
+                match item {
+                    '*' => { m[i][j] = '*'},
+                    '0'..='9' => m[i][j] = *item,
+                    _ => { m[i][j] = '.' }
+                }
+            }
+        }
+
+        let mut matches : Vec<Match> = Vec::new();
+        let mut coordinates : Vec<(usize,usize)> = Vec::new();
+        let mut number: String;
+
+        for (i, line) in m.iter().enumerate() {
+            number = String::new();
+            let mut append_number = false;
+
+            for j in 0..line.len() {
+                let value = m[i][j];
+
+                if is_number(value) {
+                    if !append_number {
+                        number = String::from(value);
+                        append_number = true;
+                        coordinates.push((i,j));
+                        continue;
+                    }
+
+                    number = format!("{}{}",number,value);
+                    coordinates.push((i,j));
+                    // We need to store all coordinates where there is a number.
+                    // After that, if a single symbol is adjacent to the number, number is added to part_numbers vector.
+                } else {
+                    if !number.is_empty(){
+                        matches.push(Match::new(number.parse().unwrap(), coordinates.clone()));
+                    }
+
+                    coordinates.clear();
+                    number.clear();
+                    append_number = false;
+                }
+            }
+
+            if !number.is_empty(){
+                matches.push(Match::new(number.parse().unwrap(), coordinates.clone()));
+            }
+        }
+
+        let mut gears: Vec<u32> = Vec::new();
+        for (i, line) in m.iter().enumerate() {
+            for j in 0..line.len() {
+                if is_gear_former(m[i][j]) {
+                    let mut current_gear_parts: Vec<u32> = Vec::new();
+                    let mut remove_parts_idx : Vec<usize> = Vec::new();
+
+                    for (idx, c) in matches.iter().enumerate() {
+                        if c.is_adjacent((i,j)) {
+                            current_gear_parts.push(c.clone().get_number());
+                            remove_parts_idx.push(idx);
+                        }
+                    }
+
+                    if current_gear_parts.len() == 2 {
+                        gears.push(current_gear_parts[0]*current_gear_parts[1]);
+                    }
+                }
+            }
+        }
+
+        let mut result:u32 = 0;
+        for p in gears {
+            result += p;
+        }
+
+        result
+     }
 }
 
 fn is_number(value: char) -> bool {
-    value != 's' && value != '.'
+    value != 's' && value != '.' && value != '*'
 }
 
 fn is_symbol(value: char) -> bool {
     value == 's'
+}
+
+fn is_gear_former(value: char) -> bool {
+    value == '*'
 }
 #[cfg(test)]
 mod tests {
@@ -215,6 +302,26 @@ mod tests {
         assert_eq!(true, m.clone().is_adjacent((3,3)));
     }
 
+    #[test]
+    fn should_calculate_gears_of_two_adjacent_parts_to_multiplier_symbols_given_example(){
+        let mut game = Game::new();
+        let input_str: &str = "\
+467..114..
+...*......
+..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598..
+";
+
+        let lines: Vec<String> = input_str.lines().map(String::from).collect();
+
+        assert_eq!(467835, game.calculate_gear_ratio_part2(lines));
+    }
     #[test]
     fn should_sum_all_parts_adjacent_to_symbols_given_example(){
         let mut game = Game::new();

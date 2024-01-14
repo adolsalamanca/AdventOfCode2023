@@ -14,8 +14,9 @@ fn main() {
             input.push(line);
         });
 
-        let out = game.sum_parts_part1(input);
+        let out = game.calculate_gear_ratio_part2(input);
         println!("The result is: {}", out);
+        // 79842967
     }
 }
 
